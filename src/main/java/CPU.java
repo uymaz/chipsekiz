@@ -11,6 +11,8 @@ public class CPU {
 
     int[] memory;
 
+    int[] display; //64x32 = 2048
+
     byte[] registers;
     int indexRegister;
 
@@ -31,9 +33,12 @@ public class CPU {
         delayTimer = 0;
         soundTimer = 0;
 
+        display = new int[2048];
         memory = new int[0xFFF];
         registers = new byte[16];
         stack = new int[16];
+
+        loadFontset();
     }
 
     private void fetchOpcode() {
@@ -256,6 +261,13 @@ public class CPU {
         }
         catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void loadFontset() {
+        //by specification, fontset has to be in the first 16*5 = 80 bytes of the memory.
+        for(int i = 0; i < 16*5; i++) {
+            memory[i] = Fontset.fontset[i];
         }
     }
 }
