@@ -108,15 +108,24 @@ public class CPU {
                         pc += 2;
                         break;
                     case 0x0004: //ADD with carry flag
-                        if(registers[opcode & 0x0F00 >> 8] + registers[opcode & 0x00F0 >> 4] > 255) {
-                            registers[0xF] = 1; //carry register
+                        byte a = registers[opcode & 0x0F00 >> 8];
+                        byte b = registers[opcode & 0x0F00 >> 4];
+
+                        if(a + b > 127) {
+                            registers[0xF] = 1;
+                        }
+                        else if(a + b < -128) {
+                            registers[0xF] = 1;
                         }
                         else {
                             registers[0xF] = 0;
                         }
+
                         registers[opcode & 0x0F00 >> 8] += registers[opcode & 0x00F0 >> 4];
+
                         pc += 2;
                         break;
+                    //TODO fix carryover flag calculation
                     case 0x0005: //SUB
                         if(registers[opcode & 0x0F00 >> 8] > registers[opcode & 0x00F0 >> 4]) {
                             registers[0xF] = 1; //carry register
@@ -127,6 +136,7 @@ public class CPU {
                         registers[opcode & 0x0F00 >> 8] -= registers[opcode & 0x00F0 >> 4];
                         pc += 2;
                         break;
+                    //TODO fix carryover flag calculation
                     case 0x0006: //SHR
                         if((registers[opcode & 0x0F00 >> 8] & 0x0001) == 1) {
                             registers[0xF] = 1;
@@ -137,6 +147,7 @@ public class CPU {
                         registers[opcode & 0x0F00 >> 8] /= 2;
                         pc += 2;
                         break;
+                    //TODO fix carryover flag calculation
                     case 0x0007: //SUBN
                         if(registers[opcode & 0x00F0 >> 4] > registers[opcode & 0x0F00 >> 8]) {
                             registers[0xF] = 1;
@@ -147,6 +158,7 @@ public class CPU {
                         registers[opcode & 0x0F00 >> 8] = (byte) (registers[opcode & 0x00F0 >> 4] - registers[opcode & 0x0F00 >> 8]);
                         pc += 2;
                         break;
+                    //TODO fix carryover flag calculation
                     case 0x000E:
                         if((registers[opcode & 0x0F00 >> 8] & 0x0010) == 1) {
                             registers[0xF] = 1;
