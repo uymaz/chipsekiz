@@ -1,21 +1,14 @@
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Emulator {
 
     static CPU cpu;
-    static Chip8 chip8;
 
     static File rom;
     static Logger logger;
@@ -53,12 +46,9 @@ public class Emulator {
         Icon playIcon = new ImageIcon(System.getProperty("user.dir") + "/icons/play.png");
         play.setIcon(playIcon);
 
-        play.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logger.info("Emulation started.");
-                startEmulation();
-            }
+        play.addActionListener(e -> {
+            logger.info("Emulation started.");
+            startEmulation();
         });
 
         menuBar.add(play);
@@ -69,41 +59,24 @@ public class Emulator {
         JMenuItem open = new JMenuItem("Open...");
         JMenuItem exit = new JMenuItem("Exit");
 
-        open.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setDialogType(JFileChooser.OPEN_DIALOG);
-                fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        open.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogType(JFileChooser.OPEN_DIALOG);
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 
-                fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+            fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
 
-                fileChooser.setFileFilter(new FileNameExtensionFilter("Chip-8 ROMs", "ch8"));
+            fileChooser.setFileFilter(new FileNameExtensionFilter("Chip-8 ROMs", "ch8"));
 
-                fileChooser.addPropertyChangeListener(new PropertyChangeListener() {
-                    public void propertyChange(PropertyChangeEvent e) {
-                        if (e.getPropertyName().equals(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY)
-                                || e.getPropertyName().equals(JFileChooser.DIRECTORY_CHANGED_PROPERTY)) {
-                            final File f = (File) e.getNewValue();
-                        }
-                    }
-                });
+            fileChooser.setVisible(true);
+            final int result = fileChooser.showOpenDialog(null);
 
-                fileChooser.setVisible(true);
-                final int result = fileChooser.showOpenDialog(null);
-
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    rom = fileChooser.getSelectedFile();
-                }
+            if (result == JFileChooser.APPROVE_OPTION) {
+                rom = fileChooser.getSelectedFile();
             }
         });
 
-        exit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
+        exit.addActionListener(e -> System.exit(0));
 
         file.add(open);
         file.add(exit);
@@ -120,8 +93,6 @@ public class Emulator {
         if(rom.exists()) {
             cpu.loadProgram(rom);
             logger.info("Program loaded");
-
-            chip8.start();
         }
         else {
             logger.severe("ROM does not exist!");
