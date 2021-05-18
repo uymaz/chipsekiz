@@ -1,8 +1,12 @@
+package io.uymaz.chip8;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 
+import java.io.IOException;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,12 +14,26 @@ public class Emulator {
 
     static CPU cpu;
 
-    static File rom;
-    static Logger logger;
+    private static final String USERDIR = System.getProperty("user.dir");
 
-    public static void main(String[] args) {
-        logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-        logger.setLevel(Level.ALL);
+    static File rom;
+    static Logger cpuLogger;
+    static Logger memoryLogger;
+
+    public static void main(String[] args){
+        cpuLogger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+        memoryLogger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+
+        cpuLogger.setLevel(Level.ALL);
+        memoryLogger.setLevel(Level.ALL);
+
+        try {
+            cpuLogger.addHandler(new FileHandler(USERDIR + "/logs/cpu.log"));
+            memoryLogger.addHandler(new FileHandler(USERDIR + "/logs/memory.log"));
+        }
+        catch(IOException e) {
+            e.printStackTrace();
+        }
 
         cpu = new CPU();
 
@@ -35,24 +53,12 @@ public class Emulator {
 
         frame.pack();
         frame.setSize(640,480);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
 
     private static JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-
-        JButton play = new JButton();
-        Icon playIcon = new ImageIcon(System.getProperty("user.dir") + "/icons/play.png");
-        play.setIcon(playIcon);
-
-        play.addActionListener(e -> {
-            logger.info("Emulation started.");
-            startEmulation();
-        });
-
-        menuBar.add(play);
-
 
         JMenu file = new JMenu("File");
 
@@ -73,6 +79,7 @@ public class Emulator {
 
             if (result == JFileChooser.APPROVE_OPTION) {
                 rom = fileChooser.getSelectedFile();
+                startEmulation();
             }
         });
 
@@ -92,10 +99,10 @@ public class Emulator {
     private static void startEmulation() {
         if(rom.exists()) {
             cpu.loadProgram(rom);
-            logger.info("Program loaded");
+            cpu.dumpArrayToFile(cpu.memory);
         }
         else {
-            logger.severe("ROM does not exist!");
+            cpuLogger.severe("ROM does not exist!");
         }
     }
 
