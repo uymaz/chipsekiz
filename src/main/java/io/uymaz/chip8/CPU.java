@@ -1,9 +1,9 @@
-import java.io.*;
+package io.uymaz.chip8;
 
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.*;
+import java.util.Calendar;
+
+import static java.lang.String.*;
 
 public class CPU {
 
@@ -48,7 +48,8 @@ public class CPU {
             second, we perform a bitwise or on the resulting 16 bit value and the memory value at [pc+1],
                     thereby effectively merging memory[pc] and memory[pc+1].
          */
-        opcode = memory[pc] << 8 | memory[pc +1];
+        opcode = (memory[pc] << 8) | memory[pc +1];
+        Emulator.cpuLogger.info(format("OPCode %05X has been loaded", opcode));
     }
 
     private void decodeAndExecuteOpcode() {
@@ -238,10 +239,23 @@ public class CPU {
                 }
                 break;
             default:
-                System.err.println("unknown opcode: " + opcode);
+                Emulator.cpuLogger.severe(format("unknown opcode: %s", opcode));
 
         }
 
+
+    }
+
+    protected void dumpArrayToFile(int[] array) {
+        File file = new File(System.getProperty("user.dir") + "/logs/DUMP-" + Calendar.getInstance().getTime().toString().replaceAll("[ :]", "-") + ".txt");
+        try(PrintWriter printWriter = new PrintWriter(new FileWriter(file))) {
+            for(int i = 0; i < array.length; i++) {
+                printWriter.printf("0x%03X\t0x%02X\n", i, memory[i]);
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -256,8 +270,13 @@ public class CPU {
         try (InputStream inputStream = new FileInputStream(file)) {
             inputStream.read(byteMemory, 0x200, 0xDFF);
             for(int i = 0x200; i < 0xFFF; i++) {
-                memory[i] = byteMemory[i];
+                /*
+                    in order to convert from byte to int, the int in question has to be ANDed with 0xFF in order to
+                    nullify unneeded bits, i.e. any bit from 32 to 9.
+                 */
+                memory[i] = (byteMemory[i] & 0xFF);
             }
+            Emulator.cpuLogger.info("ROM has been loaded into memory");
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -265,7 +284,7 @@ public class CPU {
     }
 
     private void loadFontset() {
-        //by specification, fontset has to be in the first 16*5 = 80 bytes of the memory.
+        //by specification, the fontset has to be in the first 16*5 = 80 bytes of the memory.
         for(int i = 0; i < 16*5; i++) {
             memory[i] = Fontset.fontset[i];
         }
